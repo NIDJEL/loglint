@@ -36,6 +36,10 @@ func run(pass *analysis.Pass) (any, error) {
 				pass.Reportf(call.Pos(), "log message should start with lowercase letter")
 			}
 
+			if hasBadChars(msg) {
+				pass.Reportf(call.Pos(), "log message should not contain special characters or emoji")
+			}
+
 			return true
 		})
 	}
@@ -85,6 +89,18 @@ func startsWithUpper(msg string) bool {
 		if unicode.IsLetter(r) {
 			return unicode.IsUpper(r)
 		}
+	}
+
+	return false
+}
+
+func hasBadChars(msg string) bool {
+	for _, r := range msg {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) || unicode.IsSpace(r) {
+			continue
+		}
+
+		return true
 	}
 
 	return false
