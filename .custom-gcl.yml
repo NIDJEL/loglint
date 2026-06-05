@@ -1,0 +1,6 @@
+version: v2.12.2
+name: custom-gcl
+
+plugins:
+  - module: github.com/nidjel/loglint
+    path: .
