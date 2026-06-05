@@ -7,4 +7,5 @@ func run() {
 	slog.Info("failed to connect")
 	slog.Info("warning: something went wrong...")
 	slog.Info("server started 🔥")
+	slog.Info("запуск сервера")
 }
