@@ -1,0 +1,15 @@
+# Go build files
+*.exe
+*.test
+*.out
+
+# custom golangci-lint binary
+custom-gcl*
+golangci-lint-custom*
+
+# IDE
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
