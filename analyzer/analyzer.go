@@ -4,6 +4,7 @@ import (
 	"go/ast"
 	"go/token"
 	"strconv"
+	"strings"
 	"unicode"
 
 	"golang.org/x/tools/go/analysis"
@@ -13,6 +14,18 @@ var Analyzer = &analysis.Analyzer{
 	Name: "loglint",
 	Doc:  "check log messages for style and sensitive data",
 	Run:  run,
+}
+
+var sensitiveWords = []string{
+	"password",
+	"passwd",
+	"pwd",
+	"token",
+	"api_key",
+	"apikey",
+	"secret",
+	"access_key",
+	"private_key",
 }
 
 func run(pass *analysis.Pass) (any, error) {
@@ -25,6 +38,10 @@ func run(pass *analysis.Pass) (any, error) {
 
 			if !isLogCall(call) {
 				return true
+			}
+
+			if len(call.Args) > 0 && containsSensitiveData(call.Args[0]) {
+				pass.Reportf(call.Pos(), "log message should not contain sensitive data")
 			}
 
 			msg, ok := firstStingArg(call)
@@ -125,6 +142,43 @@ func hasNonEnglishLetters(msg string) bool {
 		}
 
 		return true
+	}
+
+	return false
+}
+
+func containsSensitiveData(expr ast.Expr) bool {
+	switch e := expr.(type) {
+	case *ast.BasicLit:
+		if e.Kind != token.STRING {
+			return false
+		}
+
+		value, err := strconv.Unquote(e.Value)
+		if err != nil {
+			return false
+		}
+
+		return hasSensitiveWord(value)
+
+	case *ast.Ident:
+		return hasSensitiveWord(e.Name)
+
+	case *ast.BinaryExpr:
+		return containsSensitiveData(e.X) || containsSensitiveData(e.Y)
+
+	default:
+		return false
+	}
+}
+
+func hasSensitiveWord(text string) bool {
+	text = strings.ToLower(text)
+
+	for _, word := range sensitiveWords {
+		if strings.Contains(text, word) {
+			return true
+		}
 	}
 
 	return false
